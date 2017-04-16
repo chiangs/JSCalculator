@@ -1,71 +1,7 @@
 $(document).ready(function() {
     main();
-
-    var $array1 = [];
-    var $array2 = []; // need if 1 is not empty or something
-
-    $('button').click(function() {
-        var keyValue = $(this).val();
-        var valClass = $(this).parent().attr("class");
-
-        if (valClass == 'number') {
-            if ($(this).val() >= 0 && $(this).val() <= 9) {
-                $array2.push(keyValue);
-                // $.each($array, function(i, v) {
-                $('#display').text($('#display').text() + keyValue);
-                // });
-                console.log("1: " + $array1);
-                console.log("2: " + $array2);
-                console.log(valClass);
-            } else {
-                return NaN;
-            }
-        } else if (valClass == 'operator' || valClass == 'function') {
-            switch (keyValue) {
-                case '+':
-                    console.log('in +');
-                    $array1 = $array2;
-                    $array2.length=0;
-                    $('#display').text('');
-                    method = add($array1, $array2);
-                    break;
-                case '-':
-                    method = minus();
-                    break;
-                case '*':
-                    method = muliply();
-                    break;
-                case '/':
-                    method = divide();
-                    break;
-                case 'C':
-                    console.log('in c');
-                    method = clear($array1, $array2);
-                    break;
-                case 'sum':
-                    console.log('in sum');
-                    method = sum();
-            }
-            return method;
-        }
-    });
-
-    function clear(arr1, arr2) {
-        arr1.length = 0;
-        arr2.length = 0;
-        $('#display').text('');
-    }
-
-    function add(arr1, arr2) { //need to reduce 2 []
-        newA1 = arr1.reduce((a, b) => {
-            a + b;
-        });
-        newA2 = arr2.reduce((a, b) => {
-            a + b;
-        });
-
-        console.log(newA1 + newA2);
-    }
+    assignListenersByClass();
+    updateDisplay();
 });
 
 var main = function() {
@@ -129,17 +65,142 @@ var main = function() {
     $divide.addClass('operator');
     $multiply.addClass('operator');
     $clear.addClass('function');
-
+    $sum.addClass('function');
 }
 
 var assignListenersByClass = function(event, cb, name) {
+
     $(name).each(function() {
         $(this).on(event, cb($(this)));
     });
 };
 
-var parse = function() {
-    a.map(function(x) {
-        return parseInt(x, 10);
+var updateDisplay = function() {
+    var $tempArray = [];
+    var $firstArray = [];
+    var $secondArray = [];
+    var $operation = {};
+    var lastProduct = 1;
+
+    $('button').click(function() {
+
+        var keyValue = $(this).val();
+        var valClass = $(this).parent().attr("class");
+
+        if (valClass == 'number') {
+            if ($(this).val() >= 0 && $(this).val() <= 9) {
+
+                $tempArray.push(keyValue);
+                $('#display').text($('#display').text() + keyValue);
+                console.log($firstArray.length);
+
+            }
+        } else if (valClass == 'operator' || valClass == 'function') {
+            if ($firstArray.length < 1) {
+
+                $firstArray = $tempArray;
+                var intArr = [];
+                var joined = $firstArray.join('');
+                $intArr = parsedArray(joined); //Parse array to ints
+                $operation.first = $intArr;
+                $tempArray.length = 0;
+
+                if (isNaN($operation.first)) {
+                    $operation.first = 0;
+                };
+
+                switch (keyValue) {
+                    case '+':
+                        $operation.operator = '+';
+                        $('#display').text('');
+                        break;
+                    case '-':
+                        $operation.operator = '-';
+                        $('#display').text('');
+                        break;
+                    case '*':
+                        $operation.operator = '*';
+                        $('#display').text('');
+                        break;
+                    case '/':
+                        $operation.operator = '/';
+                        $('#display').text('');
+                        break;
+                    case 'C':
+                        console.log('in first clear');
+                        $firstArray = new Array();
+                        $secondArray = new Array();
+                        $('#display').text('');
+                        break;
+                }
+            }
+            if ($firstArray.length > 0) {
+
+                $secondArray = $tempArray;
+                var intArr = [];
+                var joined = $secondArray.join('');
+                $intArr = parsedArray(joined); //Parse array to ints
+                $operation.second = $intArr;
+                $tempArray.length = 0;
+
+                switch (keyValue) {
+                    case '=':
+                        if ($operation.operator == '+') {
+                            add($operation, lastProduct);
+                            lastProduct += current;
+                        } else if ($operation.operator == '-') {
+                            subtract($operation, lastProduct);
+                            lastProduct -= current;
+                        } else if ($operation.operator == '/') {
+                            divide($operation, lastProduct);
+                            lastProduct /= current;
+                        } else if ($operation.operator == '*') {
+                            multiply($operation, lastProduct);
+                            lastProduct *= current;
+                        }
+                        break;
+                    case 'C':
+                        $tempArray = new Array();
+                        $firstArray = new Array();
+                        $secondArray = new Array();
+                        break;
+                }
+            }
+        }
     });
+}
+
+
+var parsedArray = function(arr) {
+    return parseInt(arr);
+};
+
+var add = function(object, lastProduct) {
+    $('#display').text(object.first + object.second + lastProduct - 1);
+    current = object.first + object.second;
+    return current;
+}
+
+var subtract = function(object, lastProduct) {
+    $('#display').text(object.first - object.second - lastProduct + 1);
+    current = object.first - object.second;
+    return current;
+}
+
+var multiply = function(object, lastProduct) {
+    if (object.first === 0) {
+        object.first = 1;
+    }
+    $('#display').text(object.first * object.second * lastProduct);
+    current = object.first * object.second;
+    return current;
+}
+
+var divide = function(object, lastProduct) {
+    if (object.first === 0) {
+        object.first = 1;
+    }
+    $('#display').text(object.first / object.second / lastProduct);
+    current = object.first / object.second;
+    return current;
 }
